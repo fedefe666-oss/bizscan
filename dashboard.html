@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — BizScan</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#04342C;--teal-700:#0F6E56;--teal-500:#1D9E75;--teal-300:#5DCAA5;--teal-100:#9FE1CB;--teal-50:#E1F5EE;
+  --amber-700:#BA7517;--amber-500:#EF9F27;--amber-50:#FAEEDA;--amber-100:#FAC775;
+  --red-700:#A32D2D;--red-50:#FCEBEB;
+  --green-700:#3B6D11;--green-50:#EAF3DE;
+  --blue-700:#185FA5;--blue-50:#E6F1FB;--blue-100:#B5D4F4;
+  --gray-900:#1C1C1A;--gray-700:#444441;--gray-500:#5F5E5A;--gray-400:#888780;
+  --gray-200:#D3D1C7;--gray-100:#E8E6DF;--gray-50:#F5F3EE;
+  --white:#fff;
+  --r:10px;--r-lg:16px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
+
+/* ── Login ─────────────────────────────────────────────── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
+.login-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.login-logo{width:56px;height:56px;background:var(--teal-700);border-radius:14px;display:grid;place-items:center;margin:0 auto 1.5rem}
+.login-card h1{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.25rem}
+.login-card p{color:var(--gray-400);font-size:.875rem;margin-bottom:1.75rem}
+.login-card input{width:100%;padding:.7rem .9rem;border:1.5px solid var(--gray-200);border-radius:var(--r);font-family:inherit;font-size:.9375rem;outline:none;margin-bottom:.75rem;transition:border-color .15s}
+.login-card input:focus{border-color:var(--teal-500);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.login-err{color:var(--red-700);font-size:.825rem;margin-bottom:.75rem}
+
+/* ── App shell ─────────────────────────────────────────── */
+#app{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:var(--teal-900);color:#fff;padding:.85rem 1.75rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:34px;height:34px;background:var(--teal-500);border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.brand-name{font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800}
+.brand-sub{font-size:.65rem;color:var(--teal-300);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap.75rem}
+.topbar-stat{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:rgba(255,255,255,.55);margin-right:.75rem}
+.dot{width:6px;height:6px;background:var(--teal-300);border-radius:50%;display:inline-block}
+
+/* ── Main layout ───────────────────────────────────────── */
+.layout{display:grid;grid-template-columns:320px 1fr;flex:1;min-height:0}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+/* ── Submissions list ──────────────────────────────────── */
+.subs-panel{background:var(--white);border-right:1px solid var(--gray-200);display:flex;flex-direction:column;height:calc(100vh - 53px);position:sticky;top:53px;overflow-y:auto}
+@media(max-width:900px){.subs-panel{height:auto;position:static;border-right:none;border-bottom:1px solid var(--gray-200)}}
+.panel-hd{padding:1.25rem 1.25rem .75rem;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-hd h2{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700}
+.btn-refresh{background:var(--teal-50);color:var(--teal-700);border:none;border-radius:6px;padding:.3rem .65rem;font-size:.8rem;font-family:inherit;font-weight:600;cursor:pointer}
+.btn-refresh:hover{background:var(--teal-700);color:#fff}
+.sub-item{padding:1rem 1.25rem;border-bottom:1px solid var(--gray-100);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:.75rem}
+.sub-item:hover{background:var(--gray-50)}
+.sub-item.active{background:var(--teal-50);border-left:3px solid var(--teal-500)}
+.sub-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:.85rem;font-weight:700;flex-shrink:0;margin-top:.1rem}
+.sub-info{flex:1;min-width:0}
+.sub-name{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub-meta{font-size:.75rem;color:var(--gray-400);margin-top:.15rem}
+.sub-badges{display:flex;gap:.35rem;margin-top:.35rem;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:700;padding:.2rem .5rem;border-radius:8px;white-space:nowrap}
+.b-pending{background:var(--amber-50);color:var(--amber-700)}
+.b-done{background:var(--green-50);color:var(--green-700)}
+.b-error{background:var(--red-50);color:var(--red-700)}
+.b-analyzing{background:var(--blue-50);color:var(--blue-700)}
+.b-sector{background:var(--gray-50);color:var(--gray-500)}
+.b-file{background:var(--blue-50);color:var(--blue-700)}
+.empty-list{padding:3rem 1.25rem;text-align:center;color:var(--gray-400);font-size:.9rem}
+
+/* ── Detail panel ──────────────────────────────────────── */
+.detail-panel{overflow-y:auto;height:calc(100vh - 53px);padding:2rem}
+@media(max-width:900px){.detail-panel{height:auto}}
+.empty-detail{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--gray-400)}
+.empty-detail .ico{font-size:3rem;margin-bottom:1rem;opacity:.3}
+.empty-detail p{font-size:.9375rem}
+
+/* ── Detail content ────────────────────────────────────── */
+.detail-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.detail-empresa{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800}
+.detail-meta{font-size:.825rem;color:var(--gray-400);margin-top:.2rem}
+.detail-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:.6rem 1.1rem;border-radius:var(--r);font-family:inherit;font-size:.875rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--teal-700);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--teal-500)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--gray-700);border:1.5px solid var(--gray-200)}
+.btn-outline:hover{background:var(--gray-50)}
+.btn-danger{background:var(--red-50);color:var(--red-700);border:1px solid #F7C1C1}
+.btn-danger:hover{background:var(--red-700);color:#fff}
+.btn-print{background:var(--gray-50);color:var(--gray-700);border:1px solid var(--gray-200)}
+
+/* ── Form data view ────────────────────────────────────── */
+.section-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1rem}
+.section-hd{font-size:.75rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gray-400);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.section-hd::after{content:'';flex:1;height:1px;background:var(--gray-100)}
+.data-row{display:flex;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--gray-100)}
+.data-row:last-child{border-bottom:none}
+.dl{font-size:.8rem;font-weight:600;color:var(--gray-400);width:160px;flex-shrink:0;padding-top:.1em}
+.dv{font-size:.875rem;color:var(--gray-900);flex:1;line-height:1.55}
+.dv.empty{color:var(--gray-400);font-style:italic}
+
+/* ── Analyzing loader ──────────────────────────────────── */
+.analyzing-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:3rem;text-align:center}
+.spin{width:48px;height:48px;border:3px solid var(--teal-50);border-top-color:var(--teal-500);border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 1.25rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing-card h3{font-family:'Sora',sans-serif;font-size:1.125rem;font-weight:700;margin-bottom:.4rem}
+.analyzing-card p{color:var(--gray-400);font-size:.875rem;line-height:1.6}
+.analyze-steps{display:flex;flex-direction:column;gap:.4rem;margin-top:1.5rem;text-align:left;background:var(--gray-50);border-radius:var(--r);padding:1rem 1.25rem;max-width:320px;margin-left:auto;margin-right:auto}
+.as-item{display:flex;align-items:center;gap:.6rem;font-size:.825rem;color:var(--gray-400)}
+.as-item.done{color:var(--teal-700);font-weight:600}
+.as-item.active{color:var(--gray-900);font-weight:600}
+.as-dot{width:7px;height:7px;border-radius:50%;background:var(--gray-200);flex-shrink:0}
+.as-item.done .as-dot{background:var(--teal-500)}
+.as-item.active .as-dot{background:var(--amber-500);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Error ─────────────────────────────────────────────── */
+.err-card{background:var(--red-50);border:1px solid #F7C1C1;border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1rem}
+.err-card h3{color:var(--red-700);font-size:.9375rem;font-weight:700;margin-bottom:.3rem}
+.err-card p{color:var(--red-700);font-size:.875rem;line-height:1.55}
+
+/* ── Results ───────────────────────────────────────────── */
+.results-hd{background:var(--teal-900);color:#fff;border-radius:var(--r-lg);padding:1.75rem;margin-bottom:1.25rem}
+.res-company{font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--teal-300);margin-bottom:.2rem}
+.res-title{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.2rem}
+.res-date{font-size:.8rem;color:rgba(255,255,255,.4)}
+.health-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .9rem;border-radius:20px;font-size:.8rem;font-weight:700;margin-top:.65rem}
+.h-excelente{background:#1D9E75;color:#fff}
+.h-bueno{background:#639922;color:#fff}
+.h-mejorable{background:#BA7517;color:#fff}
+.h-critico{background:#A32D2D;color:#fff}
+.sec-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:.875rem;font-weight:700;color:var(--gray-900);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.sec-title::before{content:'';width:3px;height:1em;background:var(--teal-500);border-radius:2px;flex-shrink:0}
+.exec-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1rem;font-size:.9rem;color:var(--gray-700);line-height:1.75}
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+@media(max-width:600px){.swot-grid{grid-template-columns:1fr}}
+.swot-card{border-radius:var(--r-lg);padding:1.1rem;border:1px solid transparent}
+.sw-f{background:var(--teal-50);border-color:var(--teal-100)}
+.sw-d{background:var(--amber-50);border-color:var(--amber-100)}
+.sw-o{background:var(--green-50);border-color:#C0DD97}
+.sw-a{background:var(--red-50);border-color:#F7C1C1}
+.sw-lbl{font-size:.7rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:.65rem}
+.sw-f .sw-lbl{color:var(--teal-900)}
+.sw-d .sw-lbl{color:#633806}
+.sw-o .sw-lbl{color:var(--green-700)}
+.sw-a .sw-lbl{color:var(--red-700)}
+.sw-items{display:flex;flex-direction:column;gap:.45rem}
+.sw-item{font-size:.82rem;color:var(--gray-700);line-height:1.45;display:flex;gap:.4rem}
+.sw-item::before{content:'•';flex-shrink:0;font-weight:700;margin-top:.05em}
+.sw-f .sw-item::before{color:var(--teal-500)}
+.sw-d .sw-item::before{color:var(--amber-700)}
+.sw-o .sw-item::before{color:var(--green-700)}
+.sw-a .sw-item::before{color:var(--red-700)}
+.item-cards{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1rem}
+.item-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:1.1rem}
+.item-card.correction{border-left:4px solid var(--red-700)}
+.item-card.automation{border-left:4px solid var(--blue-700)}
+.ic-title{font-weight:700;font-size:.9rem;margin-bottom:.4rem}
+.ic-desc{font-size:.85rem;color:var(--gray-700);line-height:1.6}
+.ic-cons{background:var(--red-50);border-radius:6px;padding:.5rem .75rem;margin-top:.5rem;font-size:.8rem;color:var(--red-700);line-height:1.45}
+.ic-badges{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}
+.ic-badge{font-size:.68rem;font-weight:700;padding:.2rem .5rem;border-radius:8px;white-space:nowrap}
+.b-alto,.b-alta{background:#FCEBEB;color:var(--red-700)}
+.b-medio,.b-media{background:var(--amber-50);color:#633806}
+.b-bajo,.b-baja{background:var(--green-50);color:var(--green-700)}
+.b-corto{background:var(--teal-50);color:var(--teal-900)}
+.b-mediano{background:var(--blue-50);color:var(--blue-700)}
+.b-largo{background:var(--gray-50);color:var(--gray-500)}
+.b-tool{background:var(--blue-50);color:var(--blue-700)}
+.b-area{background:var(--gray-50);color:var(--gray-500)}
+.b-roi-alto{background:var(--green-50);color:var(--green-700)}
+.b-roi-medio{background:var(--amber-50);color:#633806}
+.b-roi-bajo{background:var(--gray-50);color:var(--gray-500)}
+.phase-cards{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1rem}
+.phase-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:1.1rem;padding-left:1.5rem;position:relative}
+.phase-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.pc-1::before{background:var(--teal-500)}
+.pc-2::before{background:var(--amber-500)}
+.pc-3::before{background:var(--blue-700)}
+.pc-4::before{background:var(--gray-400)}
+.ph-hd{display:flex;align-items:center;gap:.65rem;margin-bottom:.65rem}
+.ph-num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+.pc-1 .ph-num{background:var(--teal-500)}
+.pc-2 .ph-num{background:var(--amber-500)}
+.pc-3 .ph-num{background:var(--blue-700)}
+.pc-4 .ph-num{background:var(--gray-400)}
+.ph-name{font-weight:700;font-size:.9rem}
+.ph-meta{font-size:.78rem;color:var(--gray-400)}
+.ph-actions{list-style:none;display:flex;flex-direction:column;gap:.3rem}
+.ph-actions li{font-size:.825rem;color:var(--gray-700);display:flex;gap:.4rem;line-height:1.4}
+.ph-actions li::before{content:'→';color:var(--teal-500);flex-shrink:0;font-weight:700}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.65rem;margin-bottom:1rem}
+.kpi-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);padding:1rem}
+.kpi-name{font-weight:700;font-size:.875rem;margin-bottom:.3rem}
+.kpi-desc{font-size:.8rem;color:var(--gray-500);line-height:1.5;margin-bottom:.4rem}
+.kpi-how{font-size:.775rem;background:var(--gray-50);border-radius:6px;padding:.35rem .6rem;color:var(--gray-700);line-height:1.45}
+.concl-card{background:var(--teal-900);color:#fff;border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1rem}
+.concl-card .sec-title{color:var(--teal-300)}
+.concl-card .sec-title::before{background:var(--teal-300)}
+.concl-text{font-size:.9rem;color:rgba(255,255,255,.8);line-height:1.75}
+
+@media print{
+  .topbar,.subs-panel,.detail-actions,.btn-danger,.btn-outline{display:none!important}
+  .layout{display:block}
+  .detail-panel{height:auto;overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+    </div>
+    <h1>Dashboard BizScan</h1>
+    <p>Ingresá la contraseña para acceder al panel de análisis.</p>
+    <div id="login-err" class="login-err" style="display:none"></div>
+    <input type="password" id="pw" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-primary" style="width:100%;padding:.75rem" onclick="doLogin()">Acceder →</button>
+  </div>
+</div>
+
+<!-- ── APP ───────────────────────────────────────────────────────── -->
+<div id="app" style="display:none;flex-direction:column;min-height:100vh">
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+    </div>
+    <div><div class="brand-name">BizScan</div><div class="brand-sub">Panel de análisis</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem">
+    <span class="topbar-stat"><span class="dot"></span><span id="stat-label">Cargando...</span></span>
+    <button class="btn btn-outline" style="font-size:.8rem;padding:.4rem .8rem;color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.2)" onclick="doLogout()">Salir</button>
+  </div>
+</div>
+<div class="layout" style="flex:1">
+  <div class="subs-panel">
+    <div class="panel-hd">
+      <h2>Consultas recibidas</h2>
+      <button class="btn-refresh" onclick="loadSubs()">↻ Actualizar</button>
+    </div>
+    <div id="subs-list"><div class="empty-list">Cargando...</div></div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="empty-detail">
+      <div class="ico">📊</div>
+      <p>Seleccioná una consulta de la lista<br>para ver los detalles y analizarla.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+let token = '';
+let subs = [];
+let currentId = null;
+let analyzeInterval = null;
+let analyzeStep = 0;
+
+const ANALYZE_MSGS = [
+  'Procesando información de la empresa...',
+  'Identificando patrones en los procesos...',
+  'Evaluando oportunidades de mejora...',
+  'Detectando automatizaciones posibles...',
+  'Elaborando plan de acción...',
+  'Generando informe final...',
+];
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('login-err');
+  err.style.display = 'none';
+  try {
+    const r = await fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:pw}) });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Contraseña incorrecta'; err.style.display='block'; return; }
+    token = d.token;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadSubs();
+  } catch(e) { err.textContent = 'Error de conexión'; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  token = ''; currentId = null; subs = [];
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pw').value = '';
+}
+
+// ── Load submissions ──────────────────────────────────────────────────────────
+async function loadSubs() {
+  try {
+    const r = await fetch('/api/submissions', { headers: {'x-dashboard-token': token} });
+    if (!r.ok) { doLogout(); return; }
+    subs = await r.json();
+    renderList();
+    const pending = subs.filter(s => s.status === 'pending').length;
+    const total = subs.length;
+    document.getElementById('stat-label').textContent = `${total} consulta${total!==1?'s':''} · ${pending} pendiente${pending!==1?'s':''}`;
+  } catch(e) { console.error(e); }
+}
+
+function renderList() {
+  const el = document.getElementById('subs-list');
+  if (!subs.length) { el.innerHTML = '<div class="empty-list">No hay consultas todavía.<br>Compartí el formulario con tus clientes.</div>'; return; }
+  el.innerHTML = subs.map(s => {
+    const date = new Date(s.createdAt).toLocaleDateString('es-AR', {day:'numeric',month:'short',year:'numeric'});
+    const time = new Date(s.createdAt).toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
+    const statusBadge = {pending:'b-pending',done:'b-done',error:'b-error',analyzing:'b-analyzing'}[s.status] || 'b-pending';
+    const statusLabel = {pending:'Pendiente',done:'Analizado',error:'Error',analyzing:'Analizando...'}[s.status] || s.status;
+    const icons = {pending:'🕐',done:'✅',error:'❌',analyzing:'⚡'}[s.status] || '🕐';
+    const bg = {pending:'var(--amber-50)',done:'var(--teal-50)',error:'var(--red-50)',analyzing:'var(--blue-50)'}[s.status];
+    return `
+    <div class="sub-item ${s.id === currentId ? 'active' : ''}" onclick="selectSub('${s.id}')">
+      <div class="sub-icon" style="background:${bg}">${icons}</div>
+      <div class="sub-info">
+        <div class="sub-name">${s.empresa || 'Sin nombre'}</div>
+        <div class="sub-meta">${date} a las ${time} · ${s.empleados || '?'} empl.</div>
+        <div class="sub-badges">
+          <span class="badge ${statusBadge}">${statusLabel}</span>
+          ${s.sector ? `<span class="badge b-sector">${s.sector}</span>` : ''}
+          ${s.hasFile ? '<span class="badge b-file">📎 Archivo</span>' : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Select submission ─────────────────────────────────────────────────────────
+async function selectSub(id) {
+  currentId = id;
+  renderList();
+  const panel = document.getElementById('detail-panel');
+  panel.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--gray-400)">Cargando...</div>';
+  try {
+    const r = await fetch(`/api/submissions/${id}`, { headers: {'x-dashboard-token': token} });
+    const sub = await r.json();
+    renderDetail(sub);
+  } catch(e) { panel.innerHTML = '<div class="err-card"><h3>Error</h3><p>No se pudo cargar la consulta.</p></div>'; }
+}
+
+// ── Render detail ─────────────────────────────────────────────────────────────
+function renderDetail(sub) {
+  const panel = document.getElementById('detail-panel');
+  const f = sub.form || {};
+  const date = new Date(sub.createdAt).toLocaleDateString('es-AR', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const statusLabel = {pending:'Pendiente',done:'Analizado',error:'Error',analyzing:'Analizando...'}[sub.status] || sub.status;
+
+  let content = '';
+
+  // Header
+  content += `
+  <div class="detail-hd">
+    <div>
+      <div class="detail-empresa">${f.empresa || 'Sin nombre'}</div>
+      <div class="detail-meta">${f.sector || '—'} · ${f.empleadosTotal || '?'} empleados · Recibida el ${date} · Estado: <strong>${statusLabel}</strong></div>
+    </div>
+    <div class="detail-actions">
+      ${sub.status === 'pending' || sub.status === 'error' ? `<button class="btn btn-primary" onclick="analyzeSub('${sub.id}')">🔍 Analizar con IA</button>` : ''}
+      ${sub.status === 'done' ? `<button class="btn btn-print" onclick="window.print()">🖨 Imprimir</button>` : ''}
+      <button class="btn btn-danger" onclick="deleteSub('${sub.id}')">🗑 Eliminar</button>
+    </div>
+  </div>`;
+
+  // Error if any
+  if (sub.status === 'error' && sub.error) {
+    content += `<div class="err-card"><h3>Error en el análisis</h3><p>${sub.error}</p></div>`;
+  }
+
+  // Analyzing state
+  if (sub.status === 'analyzing') {
+    content += `
+    <div class="analyzing-card">
+      <div class="spin"></div>
+      <h3>Analizando la empresa...</h3>
+      <p>Claude IA está procesando toda la información. Esto puede tomar entre 30 y 90 segundos.</p>
+      <div class="analyze-steps" id="analyze-steps">
+        ${ANALYZE_MSGS.map((m,i) => `<div class="as-item ${i===0?'active':''}" id="as-${i}"><div class="as-dot"></div>${m}</div>`).join('')}
+      </div>
+    </div>`;
+    startAnalyzeAnim();
+  }
+
+  // Results
+  if (sub.status === 'done' && sub.analysis) {
+    content += renderAnalysis(sub.analysis, f.empresa, sub.analyzedAt);
+  }
+
+  // Form data
+  content += renderFormData(f, sub);
+
+  panel.innerHTML = content;
+
+  if (sub.status === 'analyzing') {
+    setTimeout(() => loadSubs().then(() => selectSub(sub.id)), 5000);
+  }
+}
+
+function startAnalyzeAnim() {
+  analyzeStep = 0;
+  clearInterval(analyzeInterval);
+  analyzeInterval = setInterval(() => {
+    const cur = document.getElementById(`as-${analyzeStep}`);
+    if (cur) cur.classList.add('done');
+    analyzeStep++;
+    const next = document.getElementById(`as-${analyzeStep}`);
+    if (next) { next.classList.remove('done'); next.classList.add('active'); }
+    if (analyzeStep >= ANALYZE_MSGS.length) clearInterval(analyzeInterval);
+  }, 2000);
+}
+
+// ── Analyze ───────────────────────────────────────────────────────────────────
+async function analyzeSub(id) {
+  const sub = subs.find(s => s.id === id);
+  if (sub) sub.status = 'analyzing';
+  renderList();
+  selectSub(id);
+
+  try {
+    const r = await fetch(`/api/analyze/${id}`, { method:'POST', headers: {'x-dashboard-token': token} });
+    const d = await r.json();
+    clearInterval(analyzeInterval);
+    await loadSubs();
+    selectSub(id);
+  } catch(e) {
+    clearInterval(analyzeInterval);
+    await loadSubs();
+    selectSub(id);
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function deleteSub(id) {
+  if (!confirm('¿Eliminar esta consulta? Esta acción no se puede deshacer.')) return;
+  await fetch(`/api/submissions/${id}`, { method:'DELETE', headers: {'x-dashboard-token': token} });
+  currentId = null;
+  document.getElementById('detail-panel').innerHTML = '<div class="empty-detail"><div class="ico">📊</div><p>Consulta eliminada.</p></div>';
+  await loadSubs();
+}
+
+// ── Render form data ──────────────────────────────────────────────────────────
+function renderFormData(f, sub) {
+  const row = (l, v) => `<div class="data-row"><span class="dl">${l}</span><span class="dv ${v?'':'empty'}">${v || 'No completado'}</span></div>`;
+  const areas = (f.areas || []).filter(a => a.nombre).map(a =>
+    `<div style="background:var(--gray-50);border-radius:8px;padding:.75rem;margin-bottom:.5rem;font-size:.85rem"><strong>${a.nombre}</strong> · ${a.empleados||'?'} empl.<br><span style="color:var(--gray-500)">${a.responsabilidades||'—'}</span></div>`
+  ).join('');
+
+  return `
+  <div class="section-card" style="margin-top:1.25rem">
+    <div class="section-hd">Datos del formulario</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem">
+      ${row('Empresa', f.empresa)} ${row('Sector', f.sector)}
+      ${row('Empleados', f.empleadosTotal)} ${row('Años activa', f.anios)}
+      ${row('Facturación', f.facturacion)} ${row('Admin time', f.tiempoAdmin)}
+      ${row('Presupuesto', f.presupuesto)} ${row('Plazo', f.plazo)}
+    </div>
+    <div class="data-row"><span class="dl">Descripción</span><span class="dv ${f.descripcion?'':'empty'}">${f.descripcion||'—'}</span></div>
+    ${areas ? `<div class="data-row"><span class="dl">Áreas</span><div style="flex:1">${areas}</div></div>` : ''}
+    ${row('Tareas diarias', f.tareasdiarias)}
+    ${row('Tareas repetitivas', f.tareasRepetitivas)}
+    ${row('Procesos manuales', f.procesosManual)}
+    ${row('Software', f.softwareActual)}
+    ${row('Sistema gestión', f.sistemasGestion)}
+    ${row('Problemas', f.problemasConocidos)}
+    ${row('Cuellos botella', f.cuellosBotella)}
+    ${row('Objetivo', f.objetivo)}
+    ${row('Automatizar', f.quiereAutomatizar)}
+    ${sub.file ? `<div class="data-row"><span class="dl">Archivo adjunto</span><span class="dv">📎 ${sub.file.name}</span></div>` : ''}
+  </div>`;
+}
+
+// ── Render analysis ───────────────────────────────────────────────────────────
+function renderAnalysis(a, empresa, analyzedAt) {
+  const date = analyzedAt ? new Date(analyzedAt).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) : '';
+  const healthMap = {critico:'h-critico ⚠ Estado crítico',mejorable:'h-mejorable ↑ Mejorable',bueno:'h-bueno ✓ En buen estado',excelente:'h-excelente ★ Excelente'};
+  const hw = healthMap[a.estado_general] || 'h-mejorable Mejorable';
+  const [hcls, ...hlabel] = hw.split(' ');
+
+  const bImpacto = v => `<span class="ic-badge b-${v}">Impacto ${v}</span>`;
+  const bDif = v => `<span class="ic-badge b-${v}">Dificultad ${v}</span>`;
+  const bPlazo = v => `<span class="ic-badge b-${v}">Plazo ${v}</span>`;
+  const bRoi = v => `<span class="ic-badge b-roi-${v}">ROI ${v}</span>`;
+  const bTool = v => v ? `<span class="ic-badge b-tool">${v}</span>` : '';
+  const bArea = v => v ? `<span class="ic-badge b-area">${v}</span>` : '';
+
+  const swotItem = (t,d) => `<div class="sw-item"><div><strong>${t}</strong>${d ? ` — ${d}` : ''}</div></div>`;
+
+  let html = `
+  <div class="results-hd">
+    <div class="res-company">Diagnóstico empresarial</div>
+    <div class="res-title">${empresa || 'Empresa'}</div>
+    <div class="res-date">${date}</div>
+    <span class="health-badge ${hcls}">${hlabel.join(' ')}</span>
+  </div>
+  <div class="exec-card"><div class="sec-title">Resumen ejecutivo</div>${a.resumen_ejecutivo || '—'}</div>
+  <div class="sec-title">Análisis FODA</div>
+  <div class="swot-grid">
+    <div class="swot-card sw-f"><div class="sw-lbl">Fortalezas</div><div class="sw-items">${(a.fortalezas||[]).map(i=>swotItem(i.titulo,i.descripcion)).join('')}</div></div>
+    <div class="swot-card sw-d"><div class="sw-lbl">Debilidades</div><div class="sw-items">${(a.debilidades||[]).map(i=>swotItem(i.titulo,i.descripcion)).join('')}</div></div>
+    <div class="swot-card sw-o"><div class="sw-lbl">Oportunidades</div><div class="sw-items">${(a.oportunidades||[]).map(i=>swotItem(i.titulo,i.descripcion)).join('')}</div></div>
+    <div class="swot-card sw-a"><div class="sw-lbl">Amenazas</div><div class="sw-items">${(a.amenazas||[]).map(i=>swotItem(i.titulo,i.descripcion)).join('')}</div></div>
+  </div>`;
+
+  if (a.mejoras_proceso?.length) {
+    html += `<div class="sec-title">Oportunidades de mejora</div><div class="item-cards">`;
+    a.mejoras_proceso.forEach(m => {
+      html += `<div class="item-card"><div class="ic-title">${m.titulo}</div><div class="ic-desc">${m.descripcion}</div><div class="ic-badges">${bArea(m.area)}${bImpacto(m.impacto)}${bDif(m.dificultad)}${bPlazo(m.plazo)}</div></div>`;
+    });
+    html += '</div>';
+  }
+
+  if (a.correcciones_urgentes?.length) {
+    html += `<div class="sec-title">Correcciones urgentes</div><div class="item-cards">`;
+    a.correcciones_urgentes.forEach(c => {
+      html += `<div class="item-card correction"><div class="ic-title">⚠ ${c.titulo}</div><div class="ic-desc">${c.descripcion}</div>${c.consecuencia?`<div class="ic-cons"><strong>Si no se corrige:</strong> ${c.consecuencia}</div>`:''}</div>`;
+    });
+    html += '</div>';
+  }
+
+  if (a.automatizaciones?.length) {
+    html += `<div class="sec-title">Automatizaciones posibles</div><div class="item-cards">`;
+    a.automatizaciones.forEach(au => {
+      html += `<div class="item-card automation"><div class="ic-title">${au.proceso}</div><div class="ic-desc">${au.descripcion}</div>${au.ahorro_tiempo?`<div class="ic-desc" style="margin-top:.3rem"><strong>Ahorro:</strong> ${au.ahorro_tiempo}</div>`:''}<div class="ic-badges">${bTool(au.herramienta_sugerida)}${bRoi(au.roi)}${bDif(au.dificultad)}</div></div>`;
+    });
+    html += '</div>';
+  }
+
+  if (a.plan_accion?.length) {
+    html += `<div class="sec-title">Plan de acción</div><div class="phase-cards">`;
+    a.plan_accion.forEach(p => {
+      html += `<div class="phase-card pc-${Math.min(p.fase,4)}"><div class="ph-hd"><div class="ph-num">${p.fase}</div><div><div class="ph-name">${p.nombre}</div><div class="ph-meta">${p.plazo}${p.responsable?' · '+p.responsable:''}</div></div></div><ul class="ph-actions">${(p.acciones||[]).map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
+    });
+    html += '</div>';
+  }
+
+  if (a.indicadores?.length) {
+    html += `<div class="sec-title">Indicadores clave</div><div class="kpi-grid">`;
+    a.indicadores.forEach(k => {
+      html += `<div class="kpi-card"><div class="kpi-name">${k.nombre}</div><div class="kpi-desc">${k.descripcion}</div><div class="kpi-how">📏 ${k.como_medirlo}</div></div>`;
+    });
+    html += '</div>';
+  }
+
+  if (a.conclusion) {
+    html += `<div class="concl-card"><div class="sec-title">Conclusión</div><p class="concl-text">${a.conclusion}</p></div>`;
+  }
+
+  return html;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

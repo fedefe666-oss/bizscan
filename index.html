@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Empresarial — BizScan</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#04342C;--teal-700:#0F6E56;--teal-500:#1D9E75;--teal-300:#5DCAA5;--teal-100:#9FE1CB;--teal-50:#E1F5EE;
+  --amber-700:#BA7517;--amber-50:#FAEEDA;
+  --red-700:#A32D2D;--red-50:#FCEBEB;
+  --gray-900:#1C1C1A;--gray-700:#444441;--gray-500:#5F5E5A;--gray-400:#888780;--gray-200:#D3D1C7;--gray-100:#E8E6DF;--gray-50:#F5F3EE;
+  --white:#fff;
+  --r:10px;--r-lg:16px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
+
+/* ── Shell ─────────────────────────────────── */
+.shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+@media(max-width:800px){.shell{grid-template-columns:1fr}}
+
+/* ── Sidebar ───────────────────────────────── */
+.sidebar{background:var(--teal-900);color:#fff;padding:2rem 1.5rem;display:flex;flex-direction:column;gap:2rem;position:sticky;top:0;height:100vh}
+@media(max-width:800px){.sidebar{display:none}}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:38px;height:38px;background:var(--teal-500);border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.brand-name{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:800}
+.brand-sub{font-size:.65rem;color:var(--teal-300);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.steps{display:flex;flex-direction:column;gap:3px;flex:1}
+.step-item{display:flex;align-items:center;gap:10px;padding:.55rem .75rem;border-radius:8px;font-size:.875rem;font-weight:500;color:rgba(255,255,255,.4);transition:all .2s;cursor:default}
+.step-item.active{background:rgba(255,255,255,.1);color:#fff}
+.step-item.done{color:var(--teal-300)}
+.step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.step-item.done .step-num{background:var(--teal-300);border-color:var(--teal-300);color:var(--teal-900)}
+.step-item.active .step-num{background:#fff;border-color:#fff;color:var(--teal-900)}
+.sidebar-footer{font-size:.75rem;color:rgba(255,255,255,.25);line-height:1.6}
+
+/* ── Mobile bar ────────────────────────────── */
+.mobile-bar{display:none;background:var(--teal-900);padding:.9rem 1.25rem;position:sticky;top:0;z-index:10}
+@media(max-width:800px){.mobile-bar{display:block}}
+.mobile-label{color:#fff;font-size:.75rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;opacity:.6}
+.mobile-title{color:#fff;font-size:.9375rem;font-weight:700;margin:.1rem 0 .4rem}
+.pbar{height:3px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;background:var(--teal-300);border-radius:4px;transition:width .4s ease}
+
+/* ── Main ──────────────────────────────────── */
+.main{padding:2.5rem 2rem;max-width:720px}
+@media(max-width:800px){.main{padding:1.5rem 1rem}}
+
+/* ── Step header ───────────────────────────── */
+.step-tag{display:inline-flex;align-items:center;gap:6px;background:var(--teal-50);color:var(--teal-700);font-size:.7rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.28rem .7rem;border-radius:20px;margin-bottom:.65rem}
+.step-title{font-family:'Sora',sans-serif;font-size:1.65rem;font-weight:800;margin-bottom:.3rem}
+.step-desc{color:var(--gray-400);font-size:.9375rem;margin-bottom:1.75rem}
+
+/* ── Cards ─────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r-lg);border:1px solid var(--gray-200);padding:1.5rem;margin-bottom:1rem}
+
+/* ── Form ──────────────────────────────────── */
+.fg{margin-bottom:1.1rem}
+.fg:last-child{margin-bottom:0}
+label.lbl{display:block;font-size:.8rem;font-weight:600;color:var(--gray-700);margin-bottom:.35rem;letter-spacing:.1px}
+.hint{font-size:.775rem;color:var(--gray-400);margin-top:.25rem;line-height:1.5}
+input[type=text],input[type=number],input[type=email],textarea,select{
+  width:100%;padding:.65rem .9rem;border:1.5px solid var(--gray-200);border-radius:var(--r);font-family:inherit;font-size:.9375rem;color:var(--gray-900);background:var(--white);transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;-webkit-appearance:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--teal-500);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+textarea{min-height:80px;resize:vertical;line-height:1.55}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+
+/* ── Dept card ─────────────────────────────── */
+.dept{background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:.75rem}
+.dept-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.dept-badge{background:var(--teal-50);color:var(--teal-900);font-size:.68rem;font-weight:700;padding:.22rem .6rem;border-radius:12px;letter-spacing:.5px;text-transform:uppercase}
+.btn-rm{background:var(--red-50);color:var(--red-700);border:none;border-radius:6px;padding:.28rem .6rem;font-size:.8rem;cursor:pointer;font-weight:600;font-family:inherit}
+
+/* ── Buttons ───────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:.68rem 1.4rem;border-radius:var(--r);font-family:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none}
+.btn-primary{background:var(--teal-700);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--teal-500)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--gray-700);border:1.5px solid var(--gray-200)}
+.btn-outline:hover{background:var(--gray-50)}
+.btn-add{background:var(--teal-50);color:var(--teal-700);border:1.5px dashed var(--teal-300);width:100%;padding:.65rem;margin-top:.4rem;border-radius:var(--r);font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-add:hover{background:var(--teal-700);color:#fff;border-style:solid}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--gray-100)}
+
+/* ── File zone ─────────────────────────────── */
+.file-zone{border:2px dashed var(--gray-200);border-radius:var(--r-lg);padding:2rem;text-align:center;cursor:pointer;transition:all .15s}
+.file-zone:hover,.file-zone.drag{border-color:var(--teal-500);background:var(--teal-50)}
+.file-zone p{font-size:.9rem;color:var(--gray-400);margin-top:.5rem}
+.file-zone strong{color:var(--teal-700)}
+.file-zone small{display:block;margin-top:.25rem;font-size:.775rem;color:var(--gray-400)}
+.file-preview{display:flex;align-items:center;gap:.75rem;padding:.9rem 1rem;background:var(--teal-50);border:1.5px solid var(--teal-100);border-radius:var(--r);margin-top:.75rem}
+.file-preview .fi{font-size:1.4rem}
+.file-preview .fn{font-weight:600;font-size:.875rem;color:var(--teal-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.file-preview .fs{font-size:.75rem;color:var(--teal-700)}
+.btn-clr{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--gray-400);padding:.2rem .4rem;border-radius:4px}
+.btn-clr:hover{background:var(--gray-100)}
+
+/* ── Review ────────────────────────────────── */
+.review-row{display:flex;gap:.75rem;padding:.7rem 0;border-bottom:1px solid var(--gray-100)}
+.review-row:last-child{border-bottom:none}
+.rl{font-size:.8rem;font-weight:600;color:var(--gray-400);width:150px;flex-shrink:0;padding-top:.05em}
+.rv{font-size:.875rem;color:var(--gray-900);flex:1;line-height:1.5}
+.rv.empty{color:var(--gray-400);font-style:italic}
+.info-box{background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--r);padding:.9rem 1rem;font-size:.875rem;color:var(--teal-900);line-height:1.55;margin-bottom:1rem}
+.info-box strong{font-weight:700}
+.err-box{background:var(--red-50);border:1px solid #F7C1C1;border-radius:var(--r);padding:.9rem 1rem;font-size:.875rem;color:var(--red-700);line-height:1.55;margin-top:.75rem}
+
+/* ── Success screen ────────────────────────── */
+.success-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:2rem}
+.success-icon{width:72px;height:72px;background:var(--teal-50);border-radius:50%;display:grid;place-items:center;font-size:2rem;margin-bottom:1.5rem}
+.success-screen h2{font-family:'Sora',sans-serif;font-size:1.75rem;font-weight:800;margin-bottom:.5rem}
+.success-screen p{color:var(--gray-400);font-size:.9375rem;max-width:400px;line-height:1.7;margin-bottom:1.5rem}
+.success-id{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--r);padding:.6rem 1rem;font-size:.8rem;color:var(--gray-500);font-family:monospace;margin-bottom:1.5rem}
+
+/* ── Sending overlay ───────────────────────── */
+#sending{display:none;position:fixed;inset:0;background:rgba(4,52,44,.85);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:1rem;color:#fff}
+#sending.show{display:flex}
+.spin{width:48px;height:48px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="sending"><div class="spin"></div><p style="font-size:1.1rem;font-weight:600">Enviando consulta...</p></div>
+
+<div class="shell" id="shell">
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+    </div>
+    <div><div class="brand-name">BizScan</div><div class="brand-sub">Diagnóstico con IA</div></div>
+  </div>
+  <div class="steps" id="sidebar-steps"></div>
+  <div class="sidebar-footer">Complete el formulario con información de su empresa. Un especialista analizará los datos y le enviará el diagnóstico.</div>
+</div>
+
+<div>
+<div class="mobile-bar">
+  <div class="mobile-label" id="mob-label">Paso 1 de 7</div>
+  <div class="mobile-title" id="mob-title">Información general</div>
+  <div class="pbar"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+</div>
+<div class="main" id="step-content"></div>
+</div>
+</div>
+
+<script>
+const STEPS = [
+  {label:'Info General'},{label:'Áreas y Equipo'},{label:'Procesos'},{label:'Herramientas'},
+  {label:'Problemas'},{label:'Objetivos'},{label:'Revisión y Envío'},
+];
+
+let step = 1;
+let fileData = null;
+
+const form = {
+  empresa:'',sector:'',anios:'',empleadosTotal:'',descripcion:'',facturacion:'',
+  areas:[{nombre:'',empleados:'',responsabilidades:'',herramientas:''}],
+  tareasdiarias:'',tareasSemanales:'',tareasMensuales:'',
+  tareasRepetitivas:'',procesosManual:'',tiempoAdmin:'',
+  softwareActual:'',sistemasGestion:'',comunicacion:'',procesosEnPapel:'',
+  problemasConocidos:'',cuellosBotella:'',quejasFrecuentes:'',perderTiempo:'',
+  objetivo:'',quiereAutomatizar:'',presupuesto:'',plazo:'',restricciones:'',
+};
+
+// ── Render sidebar ────────────────────────────────────────────────────────────
+function renderSidebar() {
+  document.getElementById('sidebar-steps').innerHTML = STEPS.map((s,i) => {
+    const n = i+1;
+    const cls = n < step ? 'done' : n === step ? 'active' : '';
+    return `<div class="step-item ${cls}"><div class="step-num">${n < step ? '✓' : n}</div>${s.label}</div>`;
+  }).join('');
+  const pct = Math.round(((step-1)/6)*100);
+  document.getElementById('pbar').style.width = pct+'%';
+  document.getElementById('mob-label').textContent = `Paso ${step} de 7`;
+  document.getElementById('mob-title').textContent = STEPS[step-1].label;
+}
+
+// ── Helper: bind ──────────────────────────────────────────────────────────────
+function bind(id, key, path) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = path ? form[path][key] ?? '' : form[key] ?? '';
+  el.addEventListener('input', e => {
+    if (path) form[path][key] = e.target.value;
+    else form[key] = e.target.value;
+  });
+}
+function bindArea(id, areaIdx, key) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = form.areas[areaIdx]?.[key] ?? '';
+  el.addEventListener('input', e => { if (form.areas[areaIdx]) form.areas[areaIdx][key] = e.target.value; });
+}
+
+// ── Render steps ──────────────────────────────────────────────────────────────
+function renderStep() {
+  renderSidebar();
+  const c = document.getElementById('step-content');
+  const fns = [renderS1,renderS2,renderS3,renderS4,renderS5,renderS6,renderS7];
+  c.innerHTML = fns[step-1]();
+  bindStep(step);
+}
+
+function renderS1() {
+  return `
+  <div class="step-tag">Paso 1 de 7</div>
+  <h2 class="step-title">Información general</h2>
+  <p class="step-desc">Datos básicos para contextualizar el análisis.</p>
+  <div class="card">
+    <div class="grid2">
+      <div class="fg"><label class="lbl">Nombre de la empresa *</label><input type="text" id="f-empresa" placeholder="Ej: Distribuidora López S.A."></div>
+      <div class="fg"><label class="lbl">Sector / Industria *</label><input type="text" id="f-sector" placeholder="Ej: Comercio, Logística, Salud..."></div>
+      <div class="fg"><label class="lbl">Años de actividad</label><input type="number" id="f-anios" placeholder="Ej: 12" min="0"></div>
+      <div class="fg"><label class="lbl">Total de empleados *</label><input type="number" id="f-empleadosTotal" placeholder="Ej: 25" min="1"></div>
+    </div>
+    <div class="fg"><label class="lbl">Descripción de la actividad *</label><textarea id="f-descripcion" placeholder="¿Qué hace la empresa? ¿Cómo genera valor? ¿Cuáles son sus productos o servicios principales?"></textarea></div>
+    <div class="fg"><label class="lbl">Facturación anual aproximada <span style="font-weight:400;color:var(--gray-400)">(opcional)</span></label><input type="text" id="f-facturacion" placeholder="Ej: $5.000.000 ARS / USD 150.000"><p class="hint">Ayuda a dimensionar el impacto potencial de las mejoras.</p></div>
+  </div>
+  ${nav(false, true)}`;
+}
+
+function renderS2() {
+  const areas = form.areas.map((a,i) => `
+  <div class="dept" id="dept-${i}">
+    <div class="dept-hd">
+      <span class="dept-badge">Área ${i+1}</span>
+      ${form.areas.length > 1 ? `<button class="btn-rm" onclick="removeArea(${i})">✕ Eliminar</button>` : ''}
+    </div>
+    <div class="grid2">
+      <div class="fg"><label class="lbl">Nombre del área</label><input type="text" id="a${i}-nombre" placeholder="Ej: Administración, Ventas, Depósito..."></div>
+      <div class="fg"><label class="lbl">Empleados en el área</label><input type="number" id="a${i}-empleados" placeholder="Ej: 3" min="1"></div>
+    </div>
+    <div class="fg"><label class="lbl">Responsabilidades principales</label><textarea id="a${i}-resp" placeholder="¿Qué hace esta área? ¿Cuáles son sus funciones clave?" rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">Herramientas / sistemas que usan</label><input type="text" id="a${i}-herr" placeholder="Ej: Excel, WhatsApp, sistema propio, ninguno..."></div>
+  </div>`).join('');
+  return `
+  <div class="step-tag">Paso 2 de 7</div>
+  <h2 class="step-title">Áreas y equipo</h2>
+  <p class="step-desc">Detalle cada área o departamento de su empresa.</p>
+  ${areas}
+  <button class="btn-add" onclick="addArea()">+ Agregar otra área</button>
+  ${nav(true, true)}`;
+}
+
+function renderS3() {
+  return `
+  <div class="step-tag">Paso 3 de 7</div>
+  <h2 class="step-title">Procesos y tareas</h2>
+  <p class="step-desc">Cómo trabajan en el día a día.</p>
+  <div class="card">
+    <div class="fg"><label class="lbl">Tareas diarias principales *</label><textarea id="f-tareasdiarias" placeholder="Ej: Responder mails, cargar pedidos, emitir facturas, actualizar planillas, atender clientes..."></textarea></div>
+    <div class="fg"><label class="lbl">Tareas semanales</label><textarea id="f-tareasSemanales" placeholder="Ej: Reuniones de equipo, informes semanales, cierre de caja semanal..." rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">Tareas mensuales</label><textarea id="f-tareasMensuales" placeholder="Ej: Liquidación de sueldos, cierre contable, rendiciones, reportes de gestión..." rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">Tareas repetitivas identificadas</label><textarea id="f-tareasRepetitivas" placeholder="Ej: Copiar datos de WhatsApp a Excel, enviar el mismo mail a distintos clientes, actualizar stock manualmente cada día..."></textarea><p class="hint">¿Qué se repite muchas veces al día o a la semana?</p></div>
+    <div class="fg"><label class="lbl">Procesos que se realizan manualmente</label><textarea id="f-procesosManual" placeholder="Ej: Pasaje de datos entre sistemas, control de stock en papel, seguimiento de pedidos en planilla, facturación a mano..." rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">Tiempo estimado en tareas administrativas</label>
+    <select id="f-tiempoAdmin"><option value="">Seleccionar...</option><option>Menos del 20%</option><option>Entre 20% y 40%</option><option>Entre 40% y 60%</option><option>Más del 60%</option></select>
+    <p class="hint">Del total de horas de trabajo, ¿cuánto se dedica a tareas admin (no productivas)?</p></div>
+  </div>
+  ${nav(true, true)}`;
+}
+
+function renderS4() {
+  return `
+  <div class="step-tag">Paso 4 de 7</div>
+  <h2 class="step-title">Herramientas y sistemas</h2>
+  <p class="step-desc">¿Qué tecnología utilizan actualmente?</p>
+  <div class="card">
+    <div class="fg"><label class="lbl">Software y aplicaciones que utilizan</label><textarea id="f-softwareActual" placeholder="Ej: Microsoft Office, WhatsApp Business, Mercado Libre, Tiendanube, Google Drive, Gmail..."></textarea><p class="hint">Listar todos los programas, apps y plataformas.</p></div>
+    <div class="fg"><label class="lbl">Sistemas de gestión (ERP, CRM, etc.)</label><input type="text" id="f-sistemasGestion" placeholder="Ej: Tango, Odoo, HubSpot, Salesforce, ninguno..."><p class="hint">Escribir 'ninguno' si no tienen.</p></div>
+    <div class="fg"><label class="lbl">Herramientas de comunicación interna</label><input type="text" id="f-comunicacion" placeholder="Ej: WhatsApp, email, reuniones presenciales, Slack, Teams..."></div>
+    <div class="fg"><label class="lbl">¿Cuánto trabajo se hace en papel, Excel o sin sistema?</label><textarea id="f-procesosEnPapel" placeholder="Ej: Pedidos en papel, stock en Excel, órdenes de trabajo a mano, cobros en libreta, presupuestos en Word..." rows="2"></textarea></div>
+  </div>
+  ${nav(true, true)}`;
+}
+
+function renderS5() {
+  return `
+  <div class="step-tag">Paso 5 de 7</div>
+  <h2 class="step-title">Problemas y cuellos de botella</h2>
+  <p class="step-desc">¿Dónde duele? Identificar los puntos críticos.</p>
+  <div class="card">
+    <div class="fg"><label class="lbl">Problemas conocidos en la empresa *</label><textarea id="f-problemasConocidos" placeholder="Ej: Dificultades de comunicación entre áreas, errores frecuentes en facturación, demora en entregas, pérdida de clientes, dificultad para medir rendimiento..."></textarea></div>
+    <div class="fg"><label class="lbl">Cuellos de botella en los procesos</label><textarea id="f-cuellosBotella" placeholder="Ej: Todo pasa por el dueño para aprobarse, el área de administración tarda días en procesar pedidos, solo una persona sabe usar el sistema..."></textarea></div>
+    <div class="fg"><label class="lbl">Quejas frecuentes de los empleados</label><textarea id="f-quejasFrecuentes" placeholder="Ej: 'Perdemos mucho tiempo buscando información', 'las instrucciones cambian constantemente', 'no sabemos cuáles son las prioridades'..." rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">¿Dónde se pierde más tiempo?</label><textarea id="f-perderTiempo" placeholder="Ej: Respondiendo las mismas consultas, buscando archivos, haciendo seguimiento manual de clientes, esperando aprobaciones..." rows="2"></textarea></div>
+  </div>
+  ${nav(true, true)}`;
+}
+
+function renderS6() {
+  return `
+  <div class="step-tag">Paso 6 de 7</div>
+  <h2 class="step-title">Objetivos y expectativas</h2>
+  <p class="step-desc">Sus metas guían las recomendaciones.</p>
+  <div class="card">
+    <div class="fg"><label class="lbl">Objetivo principal de este diagnóstico *</label><textarea id="f-objetivo" placeholder="Ej: Reducir costos operativos, crecer sin contratar más personal, mejorar la rentabilidad, ordenar los procesos antes de escalar..."></textarea></div>
+    <div class="fg"><label class="lbl">¿Qué procesos o tareas quisieran automatizar?</label><textarea id="f-quiereAutomatizar" placeholder="Ej: Facturación automática, respuestas a clientes, generación de reportes, gestión de stock, seguimiento de cobranzas..." rows="2"></textarea></div>
+    <div class="grid2">
+      <div class="fg"><label class="lbl">Presupuesto aproximado para mejoras</label>
+        <select id="f-presupuesto"><option value="">Seleccionar...</option><option>Bajo (hasta USD 1.000)</option><option>Medio (USD 1.000 - 10.000)</option><option>Alto (más de USD 10.000)</option><option>Sin definir</option></select>
+      </div>
+      <div class="fg"><label class="lbl">Plazo para ver resultados</label>
+        <select id="f-plazo"><option value="">Seleccionar...</option><option>1 a 3 meses</option><option>3 a 6 meses</option><option>6 a 12 meses</option><option>Más de 1 año</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="lbl">Restricciones o condicionantes</label><textarea id="f-restricciones" placeholder="Ej: No pueden cambiar el sistema contable actual, empleados resistentes a la tecnología, regulaciones del sector, presupuesto limitado..." rows="2"></textarea></div>
+  </div>
+  ${nav(true, true)}`;
+}
+
+function renderS7() {
+  const empresa = form.empresa || '—';
+  const check = (v) => v ? `<span style="color:var(--teal-700);font-weight:600">✓</span>` : `<span style="color:var(--amber-700)">○</span>`;
+  const summary = [
+    ['Empresa',form.empresa],['Sector',form.sector],['Empleados',form.empleadosTotal],
+    ['Áreas relevadas', form.areas.filter(a=>a.nombre).length || '—'],
+    ['Objetivo',form.objetivo],['Presupuesto',form.presupuesto],
+  ];
+  return `
+  <div class="step-tag">Paso 7 de 7</div>
+  <h2 class="step-title">Revisión y envío</h2>
+  <p class="step-desc">Verificá los datos antes de enviar.</p>
+
+  <div class="info-box">
+    <strong>¿Qué pasa después?</strong> Un especialista recibirá su consulta, la analizará con inteligencia artificial y le enviará un diagnóstico completo con recomendaciones personalizadas.
+  </div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div style="font-size:.8rem;font-weight:700;color:var(--gray-400);margin-bottom:.5rem;letter-spacing:.3px;text-transform:uppercase">Resumen de la consulta</div>
+    ${summary.map(([l,v])=>`<div class="review-row"><span class="rl">${l}</span><span class="rv ${v?'':'empty'}">${v||'No completado'}</span></div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div style="font-size:.875rem;font-weight:600;color:var(--gray-700);margin-bottom:.75rem">Documentación adicional <span style="font-weight:400;color:var(--gray-400)">(opcional)</span></div>
+    <p style="font-size:.875rem;color:var(--gray-400);margin-bottom:1rem;line-height:1.6">Puede adjuntar un PDF o TXT con información adicional: organigrama, manual de procesos, descripción de flujos de trabajo, etc.</p>
+    <div class="file-zone" id="fz" onclick="document.getElementById('fi').click()" ondragover="fzDrag(event,true)" ondragleave="fzDrag(event,false)" ondrop="fzDrop(event)">
+      <div style="font-size:1.75rem;opacity:.4">📎</div>
+      <p>Hacer clic o <strong>arrastrar archivo</strong> aquí</p>
+      <small>PDF o TXT · Máximo 20 MB</small>
+    </div>
+    <input type="file" id="fi" accept=".pdf,.txt,.csv" style="display:none" onchange="pickFile(this.files[0])">
+    <div id="fp" style="display:none" class="file-preview">
+      <span class="fi" id="ficon">📄</span>
+      <div style="flex:1;min-width:0"><div class="fn" id="fname">—</div><div class="fs" id="fsize">—</div></div>
+      <button class="btn-clr" onclick="clearFile()">✕</button>
+    </div>
+  </div>
+
+  <div id="err-box"></div>
+
+  <div style="display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap">
+    <button class="btn btn-outline" onclick="prevStep()">← Anterior</button>
+    <button class="btn btn-primary" onclick="submitForm()" id="btn-submit" style="flex:1">Enviar diagnóstico →</button>
+  </div>`;
+}
+
+function nav(hasPrev, hasNext) {
+  return `<div class="nav">
+    ${hasPrev ? `<button class="btn btn-outline" onclick="prevStep()">← Anterior</button>` : '<div></div>'}
+    ${hasNext ? `<button class="btn btn-primary" onclick="nextStep()">Siguiente →</button>` : ''}
+  </div>`;
+}
+
+// ── Bind inputs ───────────────────────────────────────────────────────────────
+function bindStep(s) {
+  const fields = {
+    1:['empresa','sector','anios','empleadosTotal','descripcion','facturacion'],
+    3:['tareasdiarias','tareasSemanales','tareasMensuales','tareasRepetitivas','procesosManual','tiempoAdmin'],
+    4:['softwareActual','sistemasGestion','comunicacion','procesosEnPapel'],
+    5:['problemasConocidos','cuellosBotella','quejasFrecuentes','perderTiempo'],
+    6:['objetivo','quiereAutomatizar','presupuesto','plazo','restricciones'],
+  };
+  (fields[s] || []).forEach(k => bind(`f-${k}`, k));
+  if (s === 2) bindAreaFields();
+}
+
+function bindAreaFields() {
+  form.areas.forEach((a, i) => {
+    bindArea(`a${i}-nombre`, i, 'nombre');
+    bindArea(`a${i}-empleados`, i, 'empleados');
+    bindArea(`a${i}-resp`, i, 'responsabilidades');
+    bindArea(`a${i}-herr`, i, 'herramientas');
+  });
+}
+
+// ── Area actions ──────────────────────────────────────────────────────────────
+function addArea() {
+  form.areas.push({nombre:'',empleados:'',responsabilidades:'',herramientas:''});
+  renderStep();
+}
+function removeArea(i) {
+  form.areas.splice(i, 1);
+  renderStep();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function nextStep() {
+  if (step === 1 && !form.empresa.trim()) return alert('Por favor complete el nombre de la empresa.');
+  if (step < 7) { step++; renderStep(); window.scrollTo(0,0); }
+}
+function prevStep() {
+  if (step > 1) { step--; renderStep(); window.scrollTo(0,0); }
+}
+
+// ── File handling ─────────────────────────────────────────────────────────────
+function fzDrag(e, on) { e.preventDefault(); document.getElementById('fz').classList.toggle('drag', on); }
+function fzDrop(e) { e.preventDefault(); document.getElementById('fz').classList.remove('drag'); pickFile(e.dataTransfer.files[0]); }
+
+function pickFile(f) {
+  if (!f) return;
+  const fmtSize = b => b < 1048576 ? `${(b/1024).toFixed(0)} KB` : `${(b/1048576).toFixed(1)} MB`;
+  document.getElementById('fname').textContent = f.name;
+  document.getElementById('fsize').textContent = fmtSize(f.size);
+  document.getElementById('ficon').textContent = f.type === 'application/pdf' ? '📄' : '📝';
+  document.getElementById('fp').style.display = 'flex';
+
+  const reader = new FileReader();
+  if (f.type === 'application/pdf') {
+    reader.readAsDataURL(f);
+    reader.onload = () => fileData = { type:'pdf', name:f.name, size:f.size, base64: reader.result.split(',')[1] };
+  } else {
+    reader.readAsText(f);
+    reader.onload = () => fileData = { type:'text', name:f.name, size:f.size, text: reader.result };
+  }
+}
+
+function clearFile() {
+  fileData = null;
+  document.getElementById('fp').style.display = 'none';
+  document.getElementById('fi').value = '';
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitForm() {
+  if (!form.empresa.trim()) return showErr('Por favor complete el nombre de la empresa.');
+  if (!form.descripcion.trim()) return showErr('Por favor complete la descripción de la empresa (Paso 1).');
+
+  const errBox = document.getElementById('err-box');
+  errBox.innerHTML = '';
+
+  document.getElementById('sending').classList.add('show');
+  document.getElementById('btn-submit').disabled = true;
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ form, file: fileData }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar');
+
+    document.getElementById('sending').classList.remove('show');
+    showSuccess(data.id);
+  } catch(e) {
+    document.getElementById('sending').classList.remove('show');
+    document.getElementById('btn-submit').disabled = false;
+    showErr('Error al enviar: ' + e.message + '. Verifique su conexión e intente nuevamente.');
+  }
+}
+
+function showErr(msg) {
+  const b = document.getElementById('err-box');
+  if (b) b.innerHTML = `<div class="err-box">${msg}</div>`;
+  else alert(msg);
+}
+
+function showSuccess(id) {
+  document.querySelector('.shell').style.display = 'none';
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="success-screen">
+    <div class="success-icon">✅</div>
+    <h2>¡Consulta enviada!</h2>
+    <p>Recibimos los datos de <strong>${form.empresa}</strong>. Un especialista analizará la información y le enviará el diagnóstico completo a la brevedad.</p>
+    <div class="success-id">ID de consulta: ${id}</div>
+    <p style="font-size:.825rem;color:var(--gray-400)">Guarde este ID por si necesita hacer seguimiento.</p>
+  </div>`);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderStep();
+</script>
+</body>
+</html>
